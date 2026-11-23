@@ -1,0 +1,1 @@
+server=localhost;port=3306;database=kiosco_la_familia;uid=root;pwd=;CharSet=utf8mb4;AllowPublicKeyRetrieval=True;

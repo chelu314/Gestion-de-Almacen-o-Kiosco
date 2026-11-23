@@ -1,0 +1,10 @@
+global using System.ComponentModel;
+global using System.Data;
+global using System.Diagnostics;
+global using System.Globalization;
+global using System.Text;
+global using MySql.Data.MySqlClient;
+global using KioscoLaFamilia.Datos;
+global using KioscoLaFamilia.Modelos;
+global using KioscoLaFamilia.Servicios;
+global using KioscoLaFamilia.Formularios;
