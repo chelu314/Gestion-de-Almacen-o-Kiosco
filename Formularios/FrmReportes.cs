@@ -176,7 +176,16 @@ public class FrmReportes : Form
             sb.AppendLine("Promedio mensual:");
             sb.AppendLine("   " + UI.Moneda(mesesConVentas == 0 ? 0 : totalAnio / mesesConVentas));
             sb.AppendLine();
-            if (comparables.Count > 0)
+            // Con UN solo mes no hay nada que comparar: "más" y "menos" serían el mismo mes
+            if (comparables.Count == 1)
+            {
+                sb.AppendLine("Por ahora hay un solo mes con ventas:");
+                sb.AppendLine($"   {comparables[0].NombreMes}: {UI.Moneda(comparables[0].Total)}");
+                sb.AppendLine();
+                // Una sola línea: la etiqueta ya parte el texto sola según el ancho
+                sb.AppendLine("Cuando haya dos o más meses vas a ver cuál vendió más y cuál menos.");
+            }
+            else if (comparables.Count > 1)
             {
                 var mejor = comparables.OrderByDescending(m => m.Total).First();
                 var peor = comparables.OrderBy(m => m.Total).First();
