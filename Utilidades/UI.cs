@@ -265,7 +265,9 @@ public static class UI
     public static TableLayoutPanel TablaCampos()
     {
         var t = new TableLayoutPanel { ColumnCount = 2, Dock = DockStyle.Fill, Padding = new Padding(18, 14, 18, 8), AutoScroll = true };
-        t.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 175));
+        // Ancho de la columna de los títulos (en píxeles). Con 210 entran en un solo renglón
+        // títulos largos como "Teléfono del negocio" o "Código país WhatsApp".
+        t.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 210));
         t.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         return t;
     }
@@ -276,8 +278,11 @@ public static class UI
         t.RowCount = fila + 1;
         t.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         var l = Etiqueta(etiqueta);
-        l.Anchor = AnchorStyles.Left;
-        control.Anchor = AnchorStyles.Left;
+        // Anchor = a qué bordes de la celda se "pega" el control.
+        // Left | Top: pegado a la izquierda y ARRIBA. Así, si a la última fila le sobra
+        // espacio, el control no queda centrado lejos de los demás.f
+        l.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        control.Anchor = AnchorStyles.Left | AnchorStyles.Top;
         t.Controls.Add(l, 0, fila);
         t.Controls.Add(control, 1, fila);
     }

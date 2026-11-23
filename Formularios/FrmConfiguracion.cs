@@ -21,18 +21,24 @@ public class FrmConfiguracion : Form
         var campos = UI.TablaCampos();
 
         txtNombre = UI.Texto(340);
+        // MaxLength = cantidad máxima de letras que se pueden escribir.
+        // 40 alcanza para el nombre y no rompe el encabezado ni el ticket.
+        txtNombre.MaxLength = 40;
         txtNombre.Text = ConfigRepo.Obtener("nombre_negocio", "Almacén La Tutti");
         UI.Campo(campos, "Nombre del negocio", txtNombre);
 
         txtDireccion = UI.Texto(340);
         txtDireccion.Text = ConfigRepo.Obtener("direccion");
         UI.Campo(campos, "Dirección", txtDireccion);
+        txtDireccion.MaxLength = 100;
 
         txtTelefono = UI.TextoTelefono(200);
         txtTelefono.Text = ConfigRepo.Obtener("telefono");
         UI.Campo(campos, "Teléfono del negocio", txtTelefono);
 
-        txtPais = UI.Texto(80);
+        // Caja de teléfono: no deja escribir letras. Máximo 4 números (549 = Argentina celulares).
+        txtPais = UI.TextoTelefono(80);
+        txtPais.MaxLength = 4;
         txtPais.Text = ConfigRepo.Obtener("codigo_pais", "549");
         UI.Campo(campos, "Código país WhatsApp", txtPais);
         var ayuda = UI.Etiqueta("Argentina celulares: 549", 8.5f);
@@ -57,6 +63,7 @@ public class FrmConfiguracion : Form
         txtPie = UI.Texto(340);
         txtPie.Text = ConfigRepo.Obtener("pie_ticket", "¡Gracias por su compra!");
         UI.Campo(campos, "Mensaje al pie", txtPie);
+        txtPie.MaxLength = 100;
 
         chkAlerta = new CheckBox { Text = "Avisar productos con poco stock al iniciar", AutoSize = true, Checked = ConfigRepo.ObtenerBool("alerta_stock_inicio", true) };
         UI.Campo(campos, "", chkAlerta);
@@ -64,7 +71,7 @@ public class FrmConfiguracion : Form
         chkTicket = new CheckBox { Text = "Mostrar el ticket después de cada venta", AutoSize = true, Checked = ConfigRepo.ObtenerBool("mostrar_ticket", false) };
         UI.Campo(campos, "", chkTicket);
 
-        chkAprobacion = new CheckBox { Text = "Las cuentas creadas desde el login necesitan que un administrador las active", AutoSize = true, Checked = ConfigRepo.ObtenerBool("registro_requiere_aprobacion", true) };
+        chkAprobacion = new CheckBox { Text = "Cuentas nuevas: las tiene que activar el administrador", AutoSize = true, Checked = ConfigRepo.ObtenerBool("registro_requiere_aprobacion", true) };
         UI.Campo(campos, "", chkAprobacion);
 
         var barra = UI.BarraBotones(DockStyle.Bottom, true);

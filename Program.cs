@@ -25,6 +25,7 @@ internal static class Program
                 Db.ProbarConexion();
                 ConfigRepo.Reiniciar();
                 UsuarioRepo.CrearAdminSiNoHay();
+                ProveedorRepo.CrearTablaSiNoExiste();   // tabla de proveedores (se crea sola la primera vez)
                 break;
             }
             catch (Exception ex)

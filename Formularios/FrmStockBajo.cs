@@ -26,7 +26,7 @@ public class FrmStockBajo : Form
             titulos: new Dictionary<string, string> { ["Sugerido_pedir"] = "Sugerido a pedir" });
 
         var barra = UI.BarraBotones();
-        barra.Controls.Add(UI.BotonPrincipal("Armar pedido para el proveedor", EnviarPedido, 270, Tema.WhatsApp));
+        // El pedido ya no se arma desde acá: cada proveedor es distinto, se hace desde "Proveedores y pedidos"
         barra.Controls.Add(UI.BotonSecundario("Exportar a Excel", () => UI.ExportarCsv(grid, "stock_bajo"), 170));
 
         UI.Ensamblar(this, grid, aviso, barra);
@@ -56,14 +56,10 @@ public class FrmStockBajo : Form
                 ? "Todo en orden: no hay productos por debajo del mínimo."
                 : $"⚠ {productos.Count} producto(s) con poco stock. Conviene reponerlos.";
             aviso.ForeColor = productos.Count == 0 ? UI.Exito : UI.Peligro;
+            // Fondo verde clarito si está todo bien, rosa si falta algo
+            aviso.BackColor = productos.Count == 0 ? Color.FromArgb(232, 245, 233) : Color.FromArgb(255, 235, 238);
         });
     }
 
-    private void EnviarPedido()
-    {
-        if (productos.Count == 0) { UI.Info("No hay productos para pedir."); return; }
-        var texto = Ticket.PedidoProveedor(productos.Select(p => (p, Sugerido(p))));
-        using var f = new FrmTicket("Pedido a proveedor", texto, ConfigRepo.Obtener("telefono_proveedor"));
-        f.ShowDialog(this);
-    }
+   
 }

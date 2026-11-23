@@ -34,7 +34,11 @@ public static class Ticket
         sb.AppendLine(Centro(ConfigRepo.Obtener("nombre_negocio", "Almacén La Tutti").ToUpper()));
         var dir = ConfigRepo.Obtener("direccion");
         var tel = ConfigRepo.Obtener("telefono");
-        if (dir != "") sb.AppendLine(Centro(dir));
+
+        // Si la dirección es más larga que el ticket, se parte en varios renglones
+        
+        if (dir != "")
+            foreach (var linea in Partir(dir, Ancho)) sb.AppendLine(Centro(linea));
         if (tel != "") sb.AppendLine(Centro("Tel: " + tel));
         sb.AppendLine(Separador('='));
         sb.AppendLine(Centro(titulo));
@@ -45,7 +49,10 @@ public static class Ticket
     {
         sb.AppendLine(Separador());
         var pie = ConfigRepo.Obtener("pie_ticket", "¡Gracias por su compra!");
-        if (pie != "") sb.AppendLine(Centro(pie));
+
+        // Lo mismo con el mensaje al pie: si es largo, va en varios renglones.
+        if (pie != "")
+            foreach (var linea in Partir(pie, Ancho)) sb.AppendLine(Centro(linea));
     }
 
     private static void Renglon(StringBuilder sb, string producto, decimal cantidad, string unidad, decimal precio, decimal subtotal)
@@ -57,11 +64,35 @@ public static class Ticket
         sb.AppendLine(Columnas(detalle, M(subtotal)));
     }
 
+    /// <summary>
+    /// Parte un texto largo en renglones de "ancho" letras SIN cortar palabras:
+    /// va sumando palabra por palabra y cuando la próxima no entra, empieza otro renglón.
+    /// </summary>
     private static IEnumerable<string> Partir(string texto, int ancho)
     {
         texto ??= "";
-        for (int i = 0; i < texto.Length; i += ancho)
-            yield return texto.Substring(i, Math.Min(ancho, texto.Length - i));
+        string renglon = "";
+        // Split(' ') separa el texto en palabras usando los espacios
+        foreach (var palabra in texto.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            // ¿Entra la palabra en el renglón actual? (+1 por el espacio)
+            if (renglon.Length + 1 + palabra.Length <= ancho || renglon == "")
+            {
+                renglon = renglon == "" ? palabra : renglon + " " + palabra;
+            }
+            else
+            {
+                yield return renglon;   // el renglón está lleno: lo devolvemos
+                renglon = palabra;      // y la palabra empieza el siguiente
+            }
+            // Una palabra sola más larga que el ticket (rarísimo): se corta a la fuerza
+            while (renglon.Length > ancho)
+            {
+                yield return renglon.Substring(0, ancho);
+                renglon = renglon.Substring(ancho);
+            }
+        }
+        if (renglon != "") yield return renglon;   // el último renglón que quedó
     }
 
     // ===================================================================
@@ -252,6 +283,28 @@ public static class Ticket
         return s;
     }
 
+    /// <summary>
+    /// Pedido manual para mandar por WhatsApp. No usa columnas de ancho fijo
+    /// porque se lee en el celular: un renglón por producto con su cantidad.
+    /// </summary>
+    public static string PedidoManual(string proveedor, IEnumerable<(string Producto, string Cantidad)> items)
+    {
+        var sb = new StringBuilder();
+        // Nombre y dirección salen de Configuración: si un día los cambiás, el mensaje se actualiza solo
+        string negocio = ConfigRepo.Obtener("nombre_negocio", "Almacén La Tutti");
+        string direccion = ConfigRepo.Obtener("direccion");
+
+        // Si hay dirección cargada la agregamos; si no, el mensaje queda sin ella
+        string donde = direccion == "" ? negocio : negocio + ", dirección " + direccion;
+        sb.AppendLine("Hola " + proveedor + ", ¿me podés enviar a " + donde + " lo siguiente?");
+        sb.AppendLine("Fecha: " + DateTime.Now.ToString("dd/MM/yyyy"));
+        sb.AppendLine();
+        foreach (var (producto, cantidad) in items)
+            sb.AppendLine("• " + cantidad + " - " + producto);   // ej: "• 2 cajas - Leche entera"
+        sb.AppendLine();
+        sb.AppendLine("¡Gracias!");
+        return sb.ToString();
+    }
     /// <summary>Lista de pedido para el proveedor con los productos en falta.</summary>
     public static string PedidoProveedor(IEnumerable<(Producto Producto, decimal Cantidad)> items)
     {

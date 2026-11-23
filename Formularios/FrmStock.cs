@@ -76,11 +76,18 @@ public class FrmStock : Form
 
         var acciones = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0) };
         acciones.Controls.Add(UI.BotonPrincipal("Registrar movimiento", Registrar, 220, Tema.Exito));
-        acciones.Controls.Add(UI.BotonSecundario("Ver faltantes y armar pedido", () =>
+        // "Ver faltantes" solo muestra lo que falta
+        acciones.Controls.Add(UI.BotonSecundario("Ver faltantes", () =>
         {
             using var f = new FrmStockBajo();
             f.ShowDialog(this);
-        }, 250));
+        }, 160));
+        // Los pedidos se hacen a mano, eligiendo el proveedor
+        acciones.Controls.Add(UI.BotonSecundario("Proveedores y pedidos", () =>
+        {
+            using var f = new FrmProveedores();
+            f.ShowDialog(this);
+        }, 220));
         UI.Campo(campos, "", acciones);
 
         var titulo = UI.Etiqueta("Últimos movimientos de stock", 11f, true);
