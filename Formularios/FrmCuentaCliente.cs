@@ -190,6 +190,16 @@ public class FrmCuentaCliente : Form
         var monto = Dialogos.PedirNumero(this, "Registrar pago",
             $"{cliente.Nombre} debe {UI.Moneda(Math.Max(0, saldo))}.\n¿Cuánto paga?", Math.Max(0, saldo), 0.01m);
         if (monto == null) return;
+        // Si paga MÁS de lo que debe, puede ser un error de tipeo (ej: 12000 en vez de 1200).
+        // Preguntamos antes de guardar: lo que sobra le queda como saldo a favor.
+        decimal debe = Math.Max(0, saldo);
+        if (monto.Value > debe)
+        {
+            decimal aFavor = monto.Value - debe;
+            string pregunta = "Debe " + UI.Moneda(debe) + " y está pagando " + UI.Moneda(monto.Value) + ".\n" +
+                              "Le quedarían " + UI.Moneda(aFavor) + " a favor.\n\n¿Es correcto?";
+            if (!UI.Confirmar(pregunta)) return;
+        }
 
         var formas = FormasPago.Todas.Where(f => f.Codigo != "CUENTA_CORRIENTE").ToList();
         var nombre = Dialogos.Elegir(this, "Registrar pago", "Forma de pago:", formas.Select(f => f.Nombre));

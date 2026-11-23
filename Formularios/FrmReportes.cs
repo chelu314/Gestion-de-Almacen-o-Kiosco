@@ -155,7 +155,10 @@ public class FrmReportes : Form
 
             // Meses a comparar: los ya terminados (el mes en curso está incompleto)
             bool anioActual = anio == DateTime.Today.Year;
-            var cerrados = meses.Where(m => anio < DateTime.Today.Year || (anioActual && m.Mes < DateTime.Today.Month)).ToList();
+            // SOLO los meses que tuvieron ventas: los meses en $ 0 son de antes de empezar
+            // a usar el programa, y si no, "el mes con más ventas" salía Enero con $ 0.
+            var cerrados = meses.Where(m => (anio < DateTime.Today.Year || (anioActual && m.Mes < DateTime.Today.Month))
+                                            && m.CantidadVentas > 0).ToList();
             var comparables = cerrados.Count > 0 ? cerrados : meses.Where(m => m.CantidadVentas > 0).ToList();
 
             decimal totalAnio = meses.Sum(m => m.Total);
