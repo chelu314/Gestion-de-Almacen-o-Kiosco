@@ -20,6 +20,11 @@ public class FrmVenta : Form
     private readonly ComboBox cmbForma;
     private readonly ComboBox cmbCliente;
     private int ultimaVentaId;
+    // Recuerda qué cliente estaba elegido la última vez.
+    // Sirve para cambiar la forma de pago SOLO cuando el cliente cambia,
+    // así si el cajero después elige "Efectivo" a mano, no se lo pisamos.
+    // -1 = todavía no se eligió nada.
+    private int ultimoClienteId = -1;
     private readonly Button btnTicket;
     private readonly Panel panelRapido;
     private readonly FlowLayoutPanel filaCategorias;
@@ -94,6 +99,15 @@ public class FrmVenta : Form
         filaCliente.Controls.Add(cmbCliente);
         filaCliente.Controls.Add(btnNuevoCliente);
         derecha.Controls.Add(filaCliente);
+        // ---- Fiado automático ----
+        // Cuando el cajero elige un cliente de la lista desplegable,
+        // la forma de pago cambia sola a "Cuenta corriente (fiado)".
+        cmbCliente.SelectedIndexChanged += (s, e) => ElegirFormaSegunCliente();
+
+        // Si escribió el nombre a mano y salió del campo (con Tab o haciendo
+        // clic en otro lado), también lo revisamos.
+        cmbCliente.Leave += (s, e) => ElegirFormaSegunCliente();
+
 
         derecha.Controls.Add(UI.Etiqueta("Paga con (efectivo)", 10f, true));
         numPaga = UI.Numero(100_000_000m, 2, 310);
@@ -151,7 +165,7 @@ public class FrmVenta : Form
         barraCarrito.Controls.Add(UI.BotonSecundario("Cambiar cantidad", FijarCantidad, 180));
         barraCarrito.Controls.Add(UI.BotonSecundario("Quitar producto (Supr)", QuitarSeleccionado, 200));
         // Botones de venta rápida: helados, pan por kilo, golosinas sueltas, etc.
-        panelRapido = new Panel { Dock = DockStyle.Top, Height = 190, BackColor = Color.White, Padding = new Padding(6) };
+        panelRapido = new Panel { Dock = DockStyle.Top, Height = 210, BackColor = Color.White, Padding = new Padding(6) };
         filaCategorias = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 46, WrapContents = false, AutoScroll = true };
         filaProductos = new FlowLayoutPanel { AutoScroll = true };
         UI.Ensamblar(panelRapido, filaProductos, filaCategorias);
@@ -227,8 +241,10 @@ public class FrmVenta : Form
         foreach (var p in productosRapidos.Where(x => x.Categoria == categoria))
         {
             var texto = p.Nombre + "\n" + UI.Moneda(p.PrecioVenta) + (p.PorPeso ? " /kg" : "");
-            var b = UI.Boton(texto, UI.Turquesa, 150, 64);
-            b.Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+            // Botón más alto y un poco más ancho: entran hasta 2 renglones de nombre + el precio.
+            // Los números son (ancho, alto) en píxeles.
+            var b = UI.Boton(texto, UI.Turquesa, 170, 84);
+            b.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
             var producto = p;
             b.Click += (s, e) =>
             {
@@ -241,7 +257,34 @@ public class FrmVenta : Form
         filaProductos.ResumeLayout();
         txtCodigo.Focus();
     }
+    /// <summary>
+    /// Si hay un cliente elegido → pone "Cuenta corriente (fiado)".
+    /// Si vuelven a "Consumidor final" → pone "Efectivo".
+    /// </summary>
+    private void ElegirFormaSegunCliente()
+    {
+        // ClienteSeleccionado() ya existe más abajo en este archivo:
+        // devuelve el cliente elegido, o null si es "Consumidor final".
+        var cliente = ClienteSeleccionado();
 
+        // Consumidor final no tiene cliente, así que usamos 0 como su "número".
+        int id = cliente?.Id ?? 0;
+
+        // Si es el mismo cliente que antes, no tocamos nada
+        // (respeta lo que el cajero haya elegido a mano).
+        if (id == ultimoClienteId) return;
+        ultimoClienteId = id;
+
+        // Buscamos en qué posición de la lista está cada forma de pago.
+        // Así funciona aunque algún día cambie el orden de la lista.
+        int fiado = Array.FindIndex(FormasPago.Todas, f => f.Codigo == "CUENTA_CORRIENTE");
+        int efectivo = Array.FindIndex(FormasPago.Todas, f => f.Codigo == "EFECTIVO");
+
+        if (cliente != null)
+            cmbForma.SelectedIndex = fiado;      // eligió un cliente → fiado
+        else
+            cmbForma.SelectedIndex = efectivo;   // volvió a Consumidor final → efectivo
+    }
     private void CargarClientes()
     {
         cmbCliente.Items.Clear();
