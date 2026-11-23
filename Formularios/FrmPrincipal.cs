@@ -115,6 +115,8 @@ public class FrmPrincipal : Form
         };
 
         Shown += (s, e) => ActualizarStock(ConfigRepo.ObtenerBool("alerta_stock_inicio", true));
+        // Al abrir, se fija en GitHub si hay una versión nueva (en segundo plano, sin trabar nada)
+        Shown += async (s, e) => await Actualizaciones.BuscarAsync(this);
     }
 
     /// <summary>Acceso grande del menú: título y una línea que explica para qué sirve.</summary>
