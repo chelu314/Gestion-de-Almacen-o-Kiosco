@@ -30,10 +30,10 @@ internal static class Program
             }
             catch (Exception ex)
             {
-                // El motivo exacto lo muestra la pantalla al probar la conexión
-                _ = ex;
+                // Mostramos el error REAL (antes se ocultaba y la pantalla volvía a abrirse
+                // sin explicar por qué, aunque la conexión anduviera bien)
                 using var conexion = new Formularios.FrmConexion(
-                    "No se pudo conectar. Revisá los datos de tu servidor o creá la base.");
+                    "No se pudo iniciar: " + ex.Message);
                 if (conexion.ShowDialog() != DialogResult.OK) return;
             }
         }
